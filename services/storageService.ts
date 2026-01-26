@@ -1,48 +1,102 @@
-
 import { AvailabilityEntry } from '../types';
 
-// This uses a public KV store. Change the ID (11885544) to a unique number for your team.
-const CLOUD_API_URL = 'https://keyvalue.xyz/11885544/shiftsync_data_v1';
+// Using keyvalue.xyz - Change 11885544 to your unique team ID
+const CLOUD_API_URL = 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID';
+const API_KEY = '$2a$10$YOUR_JSONBIN_API_KEY'; // Get from jsonbin.io
+
+// Alternative: Using keyvalue.xyz (simpler, no API key needed)
+const KV_STORE_ID = '11885544'; // Change this to a unique random number
+const KV_API_URL = `https://api.keyvalue.xyz/${KV_STORE_ID}/shiftsync_data`;
 
 export const storageService = {
   getEntries: async (): Promise<AvailabilityEntry[]> => {
     try {
-      const response = await fetch(CLOUD_API_URL);
-      if (!response.ok) return [];
+      const response = await fetch(KV_API_URL, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No data exists yet, return empty array
+          return [];
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
       const data = await response.text();
-      return data ? JSON.parse(data) : [];
+      
+      // Handle empty response
+      if (!data || data.trim() === '') {
+        return [];
+      }
+      
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        return [];
+      }
     } catch (error) {
-      console.error("Cloud Fetch Error, falling back to local:", error);
-      const localData = localStorage.getItem('shiftsync_fallback');
-      return localData ? JSON.parse(localData) : [];
+      console.error("Cloud Fetch Error:", error);
+      
+      // Fallback to localStorage only in browser
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const localData = localStorage.getItem('shiftsync_fallback');
+        return localData ? JSON.parse(localData) : [];
+      }
+      
+      return [];
     }
   },
 
   saveEntries: async (entries: AvailabilityEntry[]): Promise<void> => {
     try {
-      await fetch(CLOUD_API_URL, {
+      const response = await fetch(KV_API_URL, {
         method: 'POST',
-        body: JSON.stringify(entries),
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(entries)
       });
-      localStorage.setItem('shiftsync_fallback', JSON.stringify(entries));
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      // Save to localStorage as backup (only in browser)
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('shiftsync_fallback', JSON.stringify(entries));
+      }
     } catch (error) {
       console.error("Cloud Save Error:", error);
-      localStorage.setItem('shiftsync_fallback', JSON.stringify(entries));
+      
+      // Fallback to localStorage
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('shiftsync_fallback', JSON.stringify(entries));
+      }
+      
+      throw error; // Re-throw so UI can show error
     }
   },
 
   batchAddEntries: async (newEntries: AvailabilityEntry[]): Promise<void> => {
     const current = await storageService.getEntries();
-    // Create a map of existing entries to easily filter out duplicates for this specific batch
-    const workerNames = new Set(newEntries.map(e => e.workerName));
-    const dates = new Set(newEntries.map(e => e.date));
     
-    const filtered = current.filter(e => 
-      !(workerNames.has(e.workerName) && dates.has(e.date))
+    // Remove duplicates: same worker + same date
+    const workerDateMap = new Map(
+      newEntries.map(e => [`${e.workerName}-${e.date}`, e])
     );
     
-    await storageService.saveEntries([...filtered, ...newEntries]);
+    const filtered = current.filter(e => 
+      !workerDateMap.has(`${e.workerName}-${e.date}`)
+    );
+    
+    const merged = [...filtered, ...newEntries];
+    await storageService.saveEntries(merged);
   },
 
   clearAll: async (): Promise<void> => {
