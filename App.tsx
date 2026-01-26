@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { MemoryRouter, Routes, Route, Link } from 'react-router-dom';
 import { 
@@ -323,8 +322,8 @@ const ManagerDashboard: React.FC = () => {
 const LandingPage: React.FC = () => (
   <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 max-w-4xl mx-auto space-y-12">
     <div className="text-center space-y-4">
-      <h1 className="text-6xl sm:text-7xl font-black text-slate-900 tracking-tight">Shift<span className="text-indigo-600">Sync</span></h1>
-      <p className="text-xl text-slate-500 max-w-xl mx-auto">Collaboration made simple for shift teams. Sync instantly to the cloud.</p>
+      <h1 className="text-6xl sm:text-7xl font-black text-slate-900 tracking-tight">Rafsoda<span className="text-indigo-600">Sync</span></h1>
+      <p className="text-xl text-slate-500 max-w-xl mx-auto">Brought to you with love and earplugs</p>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl">
       <Link to="/worker" className="group bg-white p-10 rounded-3xl shadow-lg border border-slate-100 transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col items-center text-center space-y-4">
@@ -349,7 +348,7 @@ const App: React.FC = () => (
         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-slate-900">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white"><CalendarIcon size={18} /></div>
-            ShiftSync
+            RafsodaSync
           </Link>
           <div className="flex items-center gap-6 text-sm font-medium">
             <Link to="/worker" className="text-slate-500 hover:text-indigo-600">Submit Dates</Link>
