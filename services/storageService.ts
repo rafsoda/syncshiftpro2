@@ -1,7 +1,7 @@
 import { AvailabilityEntry } from '../types';
 
 // Using kvdb.io - Simple, reliable, free cloud storage
-const BUCKET_NAME = 'rafsoda2025'; // Change this to something unique!
+const BUCKET_NAME = 'U5nardZ8yWbXRyKyBAzRBW'; // Change this to something unique!
 const KV_URL = `https://kvdb.io/${BUCKET_NAME}/shiftsync_data`;
 
 export const storageService = {
